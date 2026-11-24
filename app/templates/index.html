@@ -27,12 +27,24 @@
       <div class="panel-head"><h2>运行对账</h2></div>
       <div class="ledger" id="ledger-list"></div>
     </article>
+    <article class="panel" id="panel-tickets">
+      <div class="panel-head"><h2>逐趟票据对账</h2><span class="hint" id="ticket-count">--</span></div>
+      <div class="table-wrap">
+        <table class="compact"><thead id="trip-head"></thead><tbody id="trip-body"></tbody></table>
+      </div>
+      <div class="table-wrap ticket-rows">
+        <table class="compact"><thead id="ticket-head"></thead><tbody id="ticket-body"></tbody></table>
+      </div>
+    </article>
     <article class="panel" id="panel-review">
       <div class="panel-head"><h2>批次复核</h2><span class="hint" id="revision">rev 0</span></div>
       <div class="review">
         <label for="comment">复核意见</label>
         <textarea id="comment" placeholder="核验来源、边界与批次结论"></textarea>
+        <label for="ticket-text">港方票据（晚到可粘贴：票号,箱号,进港日期,出港日期,金额分）</label>
+        <textarea id="ticket-text" placeholder="T-1001,C1,2026-11-02,2026-11-10,52000"></textarea>
         <div class="review-actions">
+          <button id="ticket-late" type="button" disabled>载入晚到票据</button>
           <button id="sign" type="button" disabled>签发</button>
           <button id="hold" type="button" disabled>暂缓</button>
           <a id="download" href="#" download hidden>下载复核证据</a>

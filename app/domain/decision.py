@@ -17,4 +17,7 @@ def decide_rows(items):
             item["reason"] = "FEE_MATCH"
         item.setdefault("verdict", "PASS")
         item.setdefault("reason", "OK")
+        # 保留箱单侧的原始判定，票据对账只能收紧、不能洗白。
+        item["base_verdict"] = item["verdict"]
+        item["base_reason"] = item["reason"]
     return items

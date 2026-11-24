@@ -4,7 +4,7 @@ from app.catalog import SPEC
 from app.reconcile.checks import all_checks
 
 
-def build_ledger(intake, prepared, prepare_issues, results):
+def build_ledger(intake, prepared, prepare_issues, results, reconciliation=None):
     counts = dict(intake["counts"])
     counts["prepared"] = len(prepared)
     counts["prepare_issues"] = len(prepare_issues)
@@ -15,5 +15,21 @@ def build_ledger(intake, prepared, prepare_issues, results):
         {"id": "source", "label": "来源行守恒", "ok": balanced},
         {"id": "computed", "label": "计算条目完整", "ok": counts["computed"] == len(results)},
     ]
-    return {"counts": counts, "balanced": balanced, "metric_field": SPEC.get("metric_field", "metric"),
-            "metric_total": str(metric), "checks": checks, "all_checks": all_checks(checks)}
+    ledger = {"counts": counts, "balanced": balanced, "metric_field": SPEC.get("metric_field", "metric"),
+              "metric_total": str(metric), "checks": checks}
+    if reconciliation is not None:
+        ticket_counts = reconciliation.get("counts") or {}
+        counts["trips"] = ticket_counts.get("trips", 0)
+        counts["tickets"] = ticket_counts.get("tickets_accepted", 0)
+        counts["ticket_posted"] = ticket_counts.get("posted", 0)
+        checks.extend(reconciliation.get("checks") or [])
+        ledger["tickets"] = {
+            "enabled": reconciliation.get("enabled", False),
+            "counts": ticket_counts,
+            "trips": reconciliation.get("trips", []),
+            "tickets": reconciliation.get("tickets", []),
+            "fingerprint": reconciliation.get("fingerprint", ""),
+            "source": reconciliation.get("source", {}),
+        }
+    ledger["all_checks"] = all_checks(checks)
+    return ledger

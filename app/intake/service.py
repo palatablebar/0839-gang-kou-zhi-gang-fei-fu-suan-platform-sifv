@@ -6,6 +6,7 @@ from app.config import SAMPLES
 from app.errors import DomainIssue
 from app.intake.limits import MAX_FILE, MAX_ROWS
 from app.intake.reader import read_records
+from app.domain.trip import trip_key
 
 
 def _path(profile: str, path: str | None):
@@ -47,20 +48,21 @@ def load(profile: str, path: str | None = None):
                 valid.append(row)
     grouped = OrderedDict()
     for row in valid:
-        grouped.setdefault(row[SPEC["key"]], []).append(row)
+        grouped.setdefault(trip_key(row.get(SPEC["key"]), row.get("gate_in"), row.get("gate_out")), []).append(row)
     accepted = []
-    for key, rows in grouped.items():
+    for _trip, rows in grouped.items():
         signatures = {tuple(row[column] for column in SPEC["columns"]) for row in rows}
         if len(signatures) == 1:
             accepted.append(rows[0])
             counts["accepted"] += 1
             counts["duplicates"] += len(rows) - 1
             for row in rows[1:]:
-                issues.append({"line": row["_line"], "key": key, "code": "EXACT_DUPLICATE"})
+                issues.append({"line": row["_line"], "key": row[SPEC["key"]], "code": "EXACT_DUPLICATE"})
         else:
+            # 同箱同进出港日但内容冲突：无法判断哪条是这趟的真实费用，整趟隔离。
             counts["isolated"] += len(rows)
             for row in rows:
-                issues.append({"line": row["_line"], "key": key, "code": "CONFLICT_DUPLICATE"})
+                issues.append({"line": row["_line"], "key": row[SPEC["key"]], "code": "CONFLICT_DUPLICATE"})
     accepted.sort(key=lambda row: row["_line"])
     return {"profile": profile, "path": sample, "sha256": __import__("hashlib").sha256(raw).hexdigest(),
             "rows": accepted, "issues": issues, "counts": counts}

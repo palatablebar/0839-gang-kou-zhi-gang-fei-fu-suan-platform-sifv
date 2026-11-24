@@ -3,6 +3,11 @@
 .p0839 .board{grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr)}
 .p0839 #panel-table{grid-column:1/-1}.p0839 #panel-chart{grid-row:2}.p0839 #panel-issues{grid-row:2}
 .p0839 #panel-ledger{grid-row:3}.p0839 #panel-review{grid-row:3}
+.p0839 #panel-tickets{grid-column:1/-1;grid-row:4}
+.p0839 .ticket-rows{margin-top:8px;max-height:200px}
+.p0839 table.compact th, .p0839 table.compact td{padding:4px 7px;height:auto;font-size:12px}
+.p0839 table.compact .state-ok{color:var(--accent)}
+.p0839 table.compact .state-bad{color:var(--danger)}
 .p0839 .toolbar{border-bottom:0;border-top:1px solid var(--line)}
 .p0839 .metric:nth-child(1),.p0839 .metric:nth-child(4){background:var(--accent);color:var(--surface)}
 .p0839 .metric:nth-child(1) span,.p0839 .metric:nth-child(4) span{color:inherit}

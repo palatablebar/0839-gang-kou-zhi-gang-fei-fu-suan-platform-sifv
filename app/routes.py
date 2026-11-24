@@ -4,7 +4,7 @@ from app.catalog import SPEC
 from app.config import SAMPLES
 from app.errors import DomainIssue
 from app.evidence.render import render
-from app.review.service import approve, create_run, serialize
+from app.review.service import approve, create_run, reattach_tickets, serialize
 from app.service import pipeline
 
 
@@ -25,7 +25,11 @@ def catalog():
                        ["intake", "prepare", "calculate", "decision", "reconcile", "review", "evidence"],
                        SPEC["stages"])],
                    chart=SPEC["chart"], result_columns=SPEC["result_columns"],
-                   columns=SPEC["columns"], samples=["dirty", "clean"])
+                   columns=SPEC["columns"], ticket_columns=SPEC["ticket_columns"],
+                   ticket_columns_label=SPEC["ticket_columns_label"],
+                   trip_columns=SPEC["trip_columns"], ticket_states=SPEC["ticket_states"],
+                   trip_states=SPEC["trip_states"],
+                   samples=["dirty", "clean"])
 
 
 @api.post("/api/stages/<stage_id>")
@@ -35,15 +39,27 @@ def stage(stage_id):
     data = request.get_json(silent=True) or {}
     profile = data.get("profile", "dirty")
     upto = SPEC["stages"][STAGE_INDEX[stage_id] - 1]
-    return jsonify(pipeline(profile, upto=upto))
+    return jsonify(pipeline(profile, upto=upto, tickets=data.get("tickets")))
 
 
 @api.post("/api/runs")
 def create():
     data = request.get_json(silent=True) or {}
     profile = data.get("profile", "dirty")
-    payload = pipeline(profile)
+    payload = pipeline(profile, tickets=data.get("tickets"))
     return jsonify(create_run(store(), payload))
+
+
+@api.post("/api/runs/<run_id>/tickets")
+def late_tickets(run_id):
+    data = request.get_json(silent=True) or {}
+    tickets = data.get("tickets")
+    if not isinstance(tickets, list) or not tickets:
+        raise DomainIssue("BAD_REQUEST", detail="晚到票据不能为空")
+    mode = data.get("mode", "merge")
+    if mode not in {"merge", "replace"}:
+        raise DomainIssue("BAD_REQUEST", detail="mode 只能是 merge 或 replace")
+    return jsonify(reattach_tickets(store(), run_id, tickets, mode))
 
 
 @api.get("/api/runs/<run_id>")

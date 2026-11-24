@@ -1,2 +1,7 @@
 def approval_allowed(payload):
-    return int(payload["summary"].get("REJECT", 0)) == 0
+    if int(payload["summary"].get("REJECT", 0)) != 0:
+        return False
+    tickets = payload.get("tickets") or {}
+    if tickets.get("enabled") and int(tickets.get("hard_conflicts") or 0) > 0:
+        return False
+    return True
